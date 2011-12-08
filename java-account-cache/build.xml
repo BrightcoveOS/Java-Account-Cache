@@ -1,0 +1,122 @@
+<?xml version="1.0" ?>
+<project default="main">
+	<property name="release-package-name" value="bc-java-account-cache"/>
+	<property name="release-package-version" value="4.1.0"/>
+	<property name="commons-version" value="4.1.0"/>
+	<property name="mapi-version" value="4.1.0"/>
+	<property name="mapi-lib" value="lib/bc-java-mapi-wrapper-${mapi-version}"/>
+	
+	<property name="ext-project-mapi-release-dir" value="../../../java-mapi-wrapper/Java-MAPI-Wrapper/java-mapi-wrapper/release"/>
+	
+	<property name="apache-mime-jar"                 value="${mapi-lib}/apache-mime4j-0.6.1.jar"/>
+	<property name="bc-commons-account-objects-jar"  value="${mapi-lib}/bc-commons-account-objects-${commons-version}.jar"/>
+	<property name="bc-commons-catalog-objects-jar"  value="${mapi-lib}/bc-commons-catalog-objects-${commons-version}.jar"/>
+	<property name="bc-commons-collection-utils-jar" value="${mapi-lib}/bc-commons-collection-utils-${commons-version}.jar"/>
+	<property name="bc-commons-http-utils-jar"       value="${mapi-lib}/bc-commons-http-utils-${commons-version}.jar"/>
+	<property name="bc-commons-misc-utils-jar"       value="${mapi-lib}/bc-commons-misc-utils-${commons-version}.jar"/>
+	<property name="bc-commons-system-utils-jar"     value="${mapi-lib}/bc-commons-system-utils-${commons-version}.jar"/>
+	<property name="bc-commons-xml-utils-jar"        value="${mapi-lib}/bc-commons-xml-utils-${commons-version}.jar"/>
+	<property name="apache-io-jar"                   value="${mapi-lib}/commons-io-2.0.1.jar"/>
+	<property name="apache-logging-jar"              value="${mapi-lib}/commons-logging-1.1.1.jar"/>
+	<property name="apache-http-client"              value="${mapi-lib}/httpclient-4.0.3.jar"/>
+	<property name="apache-http-core-jar"            value="${mapi-lib}/httpcore-4.1.jar"/>
+	<property name="apache-http-mime-jar"            value="${mapi-lib}/httpmime-4.0.3.jar"/>
+	<property name="json-org-jar"                    value="${mapi-lib}/json-org.jar"/>
+	<property name="xalan-jar"                       value="${mapi-lib}/xalan.jar"/>
+	<property name="mapi-jar"                        value="${mapi-lib}/bc-java-mapi-wrapper-${mapi-version}.jar"/>
+	
+	<path id="project.class.path">
+		<pathelement location="${apache-mime-jar}"/>
+		<pathelement location="${bc-commons-account-objects-jar}"/>
+		<pathelement location="${bc-commons-catalog-objects-jar}"/>
+		<pathelement location="${bc-commons-collection-utils-jar}"/>
+		<pathelement location="${bc-commons-http-utils-jar}"/>
+		<pathelement location="${bc-commons-misc-utils-jar}"/>
+		<pathelement location="${bc-commons-system-utils-jar}"/>
+		<pathelement location="${bc-commons-xml-utils-jar}"/>
+		<pathelement location="${apache-io-jar}"/>
+		<pathelement location="${apache-logging-jar}"/>
+		<pathelement location="${apache-http-client}"/>
+		<pathelement location="${apache-http-core-jar}"/>
+		<pathelement location="${apache-http-mime-jar}"/>
+		<pathelement location="${json-org-jar}"/>
+		<pathelement location="${xalan-jar}"/>
+		<pathelement location="${mapi-jar}"/>
+	</path>
+	
+	<target name="main" depends="prepare, clean, compile, javadoc, release" description="Main target">
+		<echo>Full build complete.</echo>
+	</target>
+	
+	<target name="prepare" description="Prepare target">
+		<echo>Preparing project:</echo>
+		<mkdir dir="bin"/>
+		
+		<echo>Copying java MAPI wrapper library from external project</echo>
+		<delete dir="lib/bc-java-mapi-wrapper-${mapi-version}" failonerror="false" verbose="true"/>
+		<delete file="lib/bc-java-mapi-wrapper-${mapi-version}.zip" failonerror="false" verbose="false"/>
+		<copy todir="lib">
+			<fileset dir="${ext-project-mapi-release-dir}">
+				<include name="bc-java-mapi-wrapper-${mapi-version}.zip*"/>
+			</fileset>
+		</copy>
+		<unzip src="lib/bc-java-mapi-wrapper-${mapi-version}.zip" dest="lib"/>
+	</target>
+	
+	<target name="clean" description="Clean target">
+		<echo>Cleaning project:</echo>
+		<delete dir="release"/>
+		<mkdir dir="release"/>
+		<delete dir="javadoc"/>
+		<mkdir dir="javadoc"/>
+		<delete dir="bin/com" />
+	</target>
+	
+	<target name="compile" description="Compilation target">
+		<echo>Compiling source code:</echo>
+		<javac debug="on" srcdir="src" destdir="bin" includes="**/*">
+			<classpath refid="project.class.path" />
+		</javac>
+	</target>
+	
+	<target name="javadoc" description="JavaDoc target">
+		<javadoc packagenames="com.*"
+			sourcepath="src"
+			defaultexcludes="yes"
+			destdir="javadoc"
+			author="true"
+			version="true"
+			use="true"
+			windowtitle="${release-package-name} - v${release-package-version}">
+				<classpath refid="project.class.path" />
+				<doctitle><![CDATA[<h1>com.brightcove.account.cache</h1>]]></doctitle>
+				<bottom><![CDATA[<i>http://opensource.brightcove.com/.</i>]]></bottom>
+		</javadoc>
+	</target>
+	
+	<target name="release" description="Compression target">
+		<property name="release-full-dir" value="release/${release-package-name}-${release-package-version}"/>
+		<mkdir dir="${release-full-dir}"/>
+		
+		<echo>Building full jar file:</echo>
+		<jar jarfile="${release-full-dir}/${release-package-name}-${release-package-version}.jar" duplicate="fail" whenmanifestonly="fail">
+			<fileset dir="bin" includes="**/*"/>
+			<fileset dir="src" includes="**/*"/>
+		</jar>
+		<copy todir="${release-full-dir}">
+			<fileset dir="${mapi-lib}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<copy todir="${release-full-dir}/../">
+			<fileset dir="${release-full-dir}">
+				<include name="${release-package-name}-${release-package-version}.jar"/>
+			</fileset>
+		</copy>
+		<zip destfile="${release-full-dir}/../${release-package-name}-${release-package-version}.zip">
+			<fileset dir="release">
+				<include name="${release-package-name}-${release-package-version}/**/*"/>
+			</fileset>
+		</zip>
+	</target>
+</project>
