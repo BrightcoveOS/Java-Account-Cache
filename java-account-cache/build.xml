@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <project default="main">
 	<property name="release-package-name" value="bc-java-account-cache"/>
-	<property name="release-package-version" value="4.1.0"/>
-	<property name="commons-version" value="4.1.0"/>
-	<property name="mapi-version" value="4.1.0"/>
+	<property name="release-package-version" value="4.1.2"/>
+	<property name="commons-version" value="4.1.2"/>
+	<property name="mapi-version" value="4.1.2"/>
 	<property name="mapi-lib" value="lib/bc-java-mapi-wrapper-${mapi-version}"/>
 	
 	<property name="ext-project-mapi-release-dir" value="../../../java-mapi-wrapper/Java-MAPI-Wrapper/java-mapi-wrapper/release"/>

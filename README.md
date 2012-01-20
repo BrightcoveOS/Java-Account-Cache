@@ -14,6 +14,19 @@ Coming soon - [JavaDocs](null)
 Downloads
 =========
 
+**Version 4.1.2**:
+
+Fixing bugs with duplicate videos (same reference id).
+
+Full Download - including all Brightcove libraries:
+
+- [BC Java Account Cache v4.1.2 - with dependencies](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.2.zip)
+
+Library Only:
+
+- [BC Java Account Cache v4.1.2 - library only](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.2.jar)
+
+
 **Version 4.1.0**:
 
 This is the first release of this library - the version number corresponds
