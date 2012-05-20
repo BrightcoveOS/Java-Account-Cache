@@ -14,6 +14,21 @@ Coming soon - [JavaDocs](null)
 Downloads
 =========
 
+**Version 4.1.5**:
+
+Includes all fixes from Java-Commns and Java-MAPI-Wrapper 4.1.5.
+Adding more flexible logging options.
+Fixing some date issues.
+
+Full Download - including all Brightcove libraries:
+
+- [BC Java Account Cache v4.1.5 - with dependencies](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.5.zip)
+
+Library Only:
+
+- [BC Java Account Cache v4.1.5 - library only](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.5.jar)
+
+
 **Version 4.1.2**:
 
 Fixing bugs with duplicate videos (same reference id).

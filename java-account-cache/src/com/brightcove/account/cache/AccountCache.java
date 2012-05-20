@@ -31,38 +31,61 @@ import com.brightcove.mediaapi.exceptions.BrightcoveException;
 import com.brightcove.mediaapi.wrapper.ReadApi;
 
 public class AccountCache {
-	BrightcoveAccount account;
-	ReadApi           readApi;
-	Videos            videos;
-	Logger            logger;
+	private BrightcoveAccount account;
+	private ReadApi           readApi;
+	private Videos            videos;
+	private Logger            logger;
+	private Integer           logLevel;
+	
+	public static final Integer LOG_SILENT        = 0;
+	public static final Integer LOG_INFORMATIONAL = 2;
+	public static final Integer LOG_DEBUG         = 5;
+	public static final Integer LOG_ALL           = 10;
 	
 	public AccountCache(BrightcoveAccount account){
-		init(new ReadApi(), account, null);
+		init(new ReadApi(), account, Logger.getLogger(this.getClass().getCanonicalName()), LOG_SILENT);
 	}
 	
 	public AccountCache(BrightcoveAccount account, Logger logger){
-		init(new ReadApi(logger), account, logger);
+		init(new ReadApi(logger), account, logger, LOG_INFORMATIONAL);
 	}
 	
 	public AccountCache(ReadApi readApi, BrightcoveAccount account){
-		init(readApi, account, null);
+		init(readApi, account, Logger.getLogger(this.getClass().getCanonicalName()), LOG_SILENT);
 	}
 	
 	public AccountCache(ReadApi readApi, BrightcoveAccount account, Logger logger){
-		init(readApi, account, logger);
+		init(readApi, account, logger, LOG_INFORMATIONAL);
 	}
 	
-	private void init(ReadApi readApi, BrightcoveAccount account, Logger logger){
+	public AccountCache(ReadApi readApi, BrightcoveAccount account, Logger logger, Integer logLevel){
+		init(readApi, account, logger, logLevel);
+	}
+	
+	private void init(ReadApi readApi, BrightcoveAccount account, Logger logger, Integer logLevel){
 		this.readApi = readApi;
 		this.account = account;
 		videos = new Videos();
 		this.logger = logger;
+		this.logLevel = logLevel;
 		
 		readApi.setBrightcoveExceptionHandler(new ReadApiExceptionHandler());
 	}
 	
 	private void info(String message){
-		if(logger != null){
+		if((logger != null) && (logLevel >= LOG_INFORMATIONAL)){
+			logger.info(message);
+		}
+	}
+	
+	private void debug(String message){
+		if((logger != null) && (logLevel >= LOG_DEBUG)){
+			logger.info(message);
+		}
+	}
+	
+	private void minutia(String message){
+		if((logger != null) && (logLevel >= LOG_ALL)){
 			logger.info(message);
 		}
 	}
@@ -72,12 +95,13 @@ public class AccountCache {
 			throw new AccountCacheException(AccountCacheExceptionCode.ACCOUNT_CACHE_MISSING_PARAMETERS, "Must set ReadApi and BrightcoveAccount via appropriate constructor before using ReadAccount().");
 		}
 		
+		info("Reading account from Media API...");
 		videos = new Videos();
 		
 		Integer pageNumber = 0;
 		Videos  page       = getPage(pageNumber, videoFilters, customFields);
 		while((page != null) && (page.size() > 0)){
-			info("Reading page " + pageNumber + " (" + page.getTotalCount() + " total videos).");
+			debug("Reading page " + pageNumber + " (" + page.getTotalCount() + " total videos).");
 			
 			for(Video video : page){
 				addVideo(video);
@@ -86,6 +110,8 @@ public class AccountCache {
 			pageNumber++;
 			page = getPage(pageNumber, videoFilters, customFields);
 		}
+		
+		info("Read complete.  Total videos: " + videos.getTotalCount() + " / " + videos.size() + ".");
 	}
 	
 	private void addVideo(Video video) throws AccountCacheException {
@@ -94,7 +120,7 @@ public class AccountCache {
 		}
 		
 		if(video == null){
-			info("Asked to add null video to cache.  Ignoring.");
+			debug("Asked to add null video to cache.  Ignoring.");
 			return;
 		}
 		
@@ -106,10 +132,10 @@ public class AccountCache {
 		if(lastModifiedDate != null){
 			lastModifiedString = ""+lastModifiedDate.getTime();
 		}
-		info("Attempting to add video (" + id + "," + refId + "," + lastModifiedString + "," + itemState + ") to cache.");
+		debug("Attempting to add video (" + id + "," + refId + "," + lastModifiedString + "," + itemState + ") to cache.");
 		
 		if((id == null) && (refId == null)){
-			info("Video identifiers are null.  Adding.");
+			debug("Video identifiers are null.  Adding.");
 			videos.add(video);
 			return;
 		}
@@ -123,7 +149,7 @@ public class AccountCache {
 		}
 		
 		if(found == null){
-			info("Couldn't find video already in cache, adding.");
+			debug("Couldn't find video already in cache, adding.");
 			videos.add(video);
 			return;
 		}
@@ -137,26 +163,26 @@ public class AccountCache {
 		if(foundLastModifiedDate != null){
 			foundLastModifiedString = ""+foundLastModifiedDate.getTime();
 		}
-		info("Found video already in cache (" + foundId + "," + foundRefId + "," + foundLastModifiedString + "," + foundItemState + ").");
-		info("Checking to see if last modified date is newer.");
+		debug("Found video already in cache (" + foundId + "," + foundRefId + "," + foundLastModifiedString + "," + foundItemState + ").");
+		debug("Checking to see if last modified date is newer.");
 		
 		if((foundLastModifiedDate == null) || (lastModifiedDate == null)){
 			throw new AccountCacheException(AccountCacheExceptionCode.ACCOUNT_CACHE_MISSING_FIELDS, "Read API must request Last Modified Date on all videos to function properly.");
 		}
 		
 		if(! lastModifiedDate.before(foundLastModifiedDate)){
-			info("Video is newer than one already in cache (" + lastModifiedString + " vs " + foundLastModifiedString + ").");
+			debug("Video is newer than one already in cache (" + lastModifiedString + " vs " + foundLastModifiedString + ").");
 			
-			info("Removing old video (" + videos.size() + ").");
+			debug("Removing old video (" + videos.size() + ").");
 			videos.remove(found);
 			
-			info("Adding new video (" + videos.size() + ").");
+			debug("Adding new video (" + videos.size() + ").");
 			videos.add(video);
 			
-			info("Final array size (" + videos.size() + ").");
+			debug("Final array size (" + videos.size() + ").");
 		}
 		else{
-			info("Video already in cache is newer (" + lastModifiedString + " vs " + foundLastModifiedString + ").");
+			debug("Video already in cache is newer (" + lastModifiedString + " vs " + foundLastModifiedString + ").");
 		}
 	}
 	
@@ -172,37 +198,39 @@ public class AccountCache {
 		}
 		
 		info("Determining latest modified date in current cache.");
-		Date latestModified = new Date();
-		latestModified.setTime(0l);
+		Date cacheLatestModified = new Date();
+		cacheLatestModified.setTime(0l);
 		for(Video video : videos){
 			Date lastModified = video.getLastModifiedDate();
 			if(lastModified != null){
-				if(lastModified.after(latestModified)){
-					latestModified = lastModified;
+				if(lastModified.after(cacheLatestModified)){
+					cacheLatestModified = lastModified;
 				}
 			}
 		}
-		info("Latest modified date: '" + latestModified + "'.");
+		info("Latest modified date: '" + cacheLatestModified + "'.");
+		
+		info("Updating cache from Media API...");
 		
 		Integer pageNumber = 0;
 		Videos  page       = getPage(pageNumber, videoFilters, customFields);
 		while((page != null) && (page.size() > 0)){
-			info("Reading page '" + pageNumber + "'.");
+			debug("Reading page '" + pageNumber + "'.");
 			
 			Boolean cont = true;
 			for(Video video : page){
-				Long   videoId      = video.getId();
-				String refId        = video.getReferenceId();
-				Date   lastModified = video.getLastModifiedDate();
+				Long   videoId           = video.getId();
+				String refId             = video.getReferenceId();
+				Date   videoLastModified = video.getLastModifiedDate();
 				
 				if(cont){
-					info("    Read video [" + videoId + "," + refId + "] (" + lastModified + ").");
+					debug("    Read video [" + videoId + "," + refId + "] (" + videoLastModified + ").");
 				}
 				
 				addVideo(video);
 				
-				if((lastModified != null) && lastModified.before(latestModified)){
-					info("    Found a video older than the most recent video in the cache.  Assuming we're done (but will finish the page we're on)...");
+				if((videoLastModified != null) && videoLastModified.before(cacheLatestModified)){
+					debug("    Found a video older than the most recent video in the cache.  Assuming we're done (but will finish the page we're on)...");
 					cont = false;
 				}
 			}
@@ -218,8 +246,15 @@ public class AccountCache {
 	}
 	
 	public void Serialize(File cacheFile) throws AccountCacheException {
+		Serialize(cacheFile, true);
+	}
+	
+	public void Serialize(File cacheFile, Boolean stripInvalidCharacters) throws AccountCacheException {
 		try {
 			Document videoDoc  = videos.toXml();
+			if(stripInvalidCharacters){
+				XalanUtils.stripNonValidXMLCharacters(videoDoc);
+			}
 			String   xmlString = XalanUtils.prettyPrintWithTrAX(videoDoc);
 			FileUtils.writeStringToFile(cacheFile, xmlString, "UTF-8");
 		}
@@ -236,6 +271,8 @@ public class AccountCache {
 	
 	public void Deserialize(File cacheFile) throws AccountCacheException {
 		videos  = new Videos();
+		
+		info("Reading cache from disk...");
 		
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -261,6 +298,8 @@ public class AccountCache {
 		catch (SAXException saxe) {
 			throw new AccountCacheException(AccountCacheExceptionCode.ACCOUNT_CACHE_XML_READ_EXCEPTION, "Caught " + saxe + " trying to read XML from videos cache.");
 		}
+		
+		info("Cache read.  Total videos: " + videos.getTotalCount() + " / " + videos.size() + ".");
 	}
 	
 	public Video getVideoById(Long id){
@@ -292,30 +331,42 @@ public class AccountCache {
 	}
 	
 	public Video getVideoByReferenceId(String refId){
+		info("Looking for reference id '" + refId + "' (with filters).");
+		
 		Video video = getVideoByReferenceIdUnfiltered(refId);
 		if(video == null){
+			info("Video '" + refId + "' not found.");
 			return null;
 		}
 		
 		ItemStateEnum state = video.getItemState();
 		if(state == null){
+			info("Video '" + refId + "' found, but couldn't determine item state.");
 			return null;
 		}
 		
 		if(! ItemStateEnum.ACTIVE.equals(state)){
+			info("Video '" + refId + "' found, but isn't active.");
 			return null;
 		}
 		
+		info("Video '" + refId + "' found.");
 		return video;
 	}
 	
 	public Video getVideoByReferenceIdUnfiltered(String refId){
+		info("Looking for reference id '" + refId + "' without filters.");
+		
 		for(Video video : videos){
 			String videoRefId = video.getReferenceId();
+			minutia("    Examining video '" + videoRefId + "'.");
 			if((videoRefId != null) && videoRefId.equals(refId)){
+				info("    Found video '" + videoRefId + "'.");
 				return video;
 			}
 		}
+		
+		info("Video '" + refId + "' not found.");
 		return null;
 	}
 	
@@ -328,6 +379,8 @@ public class AccountCache {
 		SortOrderTypeEnum       sortOrderType = SortOrderTypeEnum.DESC;
 		EnumSet<VideoFieldEnum> videoFields   = VideoFieldEnum.CreateFullEnumSet();
 		
+		debug("Getting page '" + pageNumber + "'.");
+		
 		try {
 			Videos videos = readApi.FindModifiedVideos(account.getReadToken(), fromDate, videoFilters, pageSize, pageNumber, sortBy, sortOrderType, videoFields, customFields);
 			return videos;
@@ -335,5 +388,21 @@ public class AccountCache {
 		catch (BrightcoveException be) {
 			throw new AccountCacheException(AccountCacheExceptionCode.ACCOUNT_CACHE_XML_READ_EXCEPTION, "Caught " + be + " trying to generate XML from account videos (via JSON libraries).");
 		}
+	}
+	
+	public Videos getVideos(){
+		return videos;
+	}
+	
+	public void setVideos(Videos videos){
+		this.videos = videos;
+	}
+	
+	public Integer getLogLevel(){
+		return logLevel;
+	}
+	
+	public void setLogLevel(Integer logLevel){
+		this.logLevel = logLevel;
 	}
 }
