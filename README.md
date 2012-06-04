@@ -14,19 +14,24 @@ Coming soon - [JavaDocs](null)
 Downloads
 =========
 
-**Version 4.1.5**:
+**Version 4.1.6**:
 
-Includes all fixes from Java-Commns and Java-MAPI-Wrapper 4.1.5.
-Adding more flexible logging options.
-Fixing some date issues.
+Includes all fixes from Java-Commns and Java-MAPI-Wrapper 4.1.5 and 4.1.6.
+Fundamentally changing the inner workings.  Rather than keeping everything in memory, metadata is saved off to files, and only the id/date indexes are kept around.
+This has implications, including:
+- Additional search features will be difficult (need to re-examine indexes if we decide to go that route)
+- Memory usage is vastly decreased
+- A lot of directories/files will be dropped to disk
+- Performance will be vastly improved for some actions, slightly decreased for others
+
 
 Full Download - including all Brightcove libraries:
 
-- [BC Java Account Cache v4.1.5 - with dependencies](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.5.zip)
+- [BC Java Account Cache v4.1.6 - with dependencies](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.6.zip)
 
 Library Only:
 
-- [BC Java Account Cache v4.1.5 - library only](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.5.jar)
+- [BC Java Account Cache v4.1.6 - library only](https://github.com/downloads/BrightcoveOS/Java-Account-Cache/bc-java-account-cache-4.1.6.jar)
 
 
 **Version 4.1.2**:
